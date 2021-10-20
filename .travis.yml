@@ -1,4 +1,23 @@
 language: generic
 sudo: required
-#script:
-#  - docker run -e CI=true USERNAME/react-test npm test
+
+services:
+  - docker
+
+before_install:
+  - docker build -t mzaroui/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mzaroui/react-test npm test
+
+after_success:
+  - docker build -t mzaroui/multi-client ./client
+  - docker build -t mzaroui/multi-nginx ./nginx
+  - docker build -t mzaroui/multi-server ./server
+  - docker build -t mzaroui/multi-worker ./worker
+# login to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER-ID" --password-stdin
+  - docker push mzaroui/multi-client
+  - docker push mzaroui/multi-nginx
+  - docker push mzaroui/multi-server
+  - docker push mzaroui/multi-worker
